@@ -1,0 +1,73 @@
+#!/usr/bin/env python
+# Author: sanjeyac
+# Code: 
+
+import os
+import json
+from pprint import pprint
+import sys
+import getopt
+
+def getList():
+	firefox = os.environ['HOME']+"/.mozilla/firefox"
+	appList = []
+	appDir = {}
+	for dirname in os.listdir(firefox):
+	    if dirname.endswith("default"):
+		cwd = firefox + "/" + dirname + "/webapps"
+		for webapp in os.listdir(cwd):
+				if not webapp.endswith("json"):
+					manifestDir = cwd+"/"+webapp			
+					with open(manifestDir+"/manifest.webapp") as data_file:
+						data = json.load(data_file)
+						appList.append(str( data[u'name'] ) )
+						appDir[str(data[u'name'])] = manifestDir
+	return appDir
+
+def showList():
+	print "Installed apps:"
+	list = getList()
+	for item in list:
+		print "\t"+str(item)
+
+
+def unistall(fullname):
+	name = fullname.replace(" ","")
+	name = name.lower()
+	dirs = getList()
+	os.system("rm ~/.local/share/applications/owa-"+name+"-*.desktop")
+	os.system("rm -rf "+dirs[fullname])
+	os.system("rm -rf ~/."+name+"-*")
+
+def help():
+	return 0
+
+def usage():
+	print "Parameters:"
+	print "\t -r <name> : uninstall app"
+	print "\t -l        : show installed apps"
+	print "\t -h        : show this help"
+
+def main(argv):
+    try:                                
+        opts, args = getopt.getopt(argv, "hlr:", ["help", "list", "remove"])
+    except getopt.GetoptError:          
+        usage()                         
+        sys.exit(2)                     
+    for opt, arg in opts:
+        if opt in ("-l", "--list"):
+			showList()                  
+        elif opt in ("-r", "--remove"):
+			print "Removing: "+arg
+			unistall(arg)
+        elif opt in ("-h", "--help"):
+			print arg
+
+if __name__ == "__main__":
+	if ( len( sys.argv ) == 1 ):
+		usage()
+	main(sys.argv[1:])
+
+
+
+
